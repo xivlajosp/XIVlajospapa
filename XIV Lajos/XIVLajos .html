@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Áldott Kereső — Keresztre feszítéses háttér</title>
+<style>
+html, body {
+  margin:0;
+  padding:0;
+  height:100%;
+  font-family:Arial,sans-serif;
+  color:white;
+  position:relative;
+  overflow:hidden; /* Gördülés tiltása */
+}
+body::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:url('https://upload.wikimedia.org/wikipedia/commons/6/6a/The_Crucifixion_MET_DT10248.jpg') center/cover no-repeat;
+  filter:blur(6px) brightness(0.45);
+  z-index:-1;
+}
+.wrap{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  box-sizing:border-box;
+}
+.logo{font-size:56px;font-weight:bold;color:#ffdd57;margin-bottom:10px;}
+.subtitle{color:#ddd;margin-bottom:20px;}
+.menu{position:absolute;top:20px;left:20px;display:flex;gap:10px;flex-wrap:wrap;}
+.dropbtn{background-color:rgba(0,0,0,0.3);color:white;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;transition: transform 0.2s ease, background 0.3s ease;}
+.dropbtn:hover{transform:scale(1.05);background:rgba(255,221,87,0.9);}
+.dropdown{position:relative;display:inline-block;}
+.dropdown-content{display:none;position:absolute;background-color:rgba(0,0,0,0.85);border-radius:6px;min-width:160px;z-index:1;opacity:0;transform:translateY(-10px);transition: opacity 0.3s ease, transform 0.3s ease;}
+.dropdown-content a{color:white;padding:12px 16px;text-decoration:none;display:block;}
+.dropdown:hover .dropdown-content{display:block;opacity:1;transform:translateY(0);}
+.menu .dropbtn{box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.search{display:flex;align-items:center;border:1px solid #555;padding:12px 14px;border-radius:28px;background:rgba(0,0,0,0.5);box-shadow:0 6px 18px rgba(0,0,0,0.2);}
+.search input{flex:1;border:0;outline:none;background:transparent;color:white;font-size:18px;}
+.btns{display:flex;gap:12px;justify-content:center;margin-top:20px;}
+button{background:rgba(255,255,255,0.1);border:1px solid #aaa;padding:10px 16px;border-radius:6px;color:white;cursor:pointer;}
+button.primary{background:#ffdd57;color:black;border:none;}
+#rotaloQuote{margin-top:20px;color:#ffdd57;font-style:italic;}
+#datum{margin-top:10px;color:#ddd;font-style:normal;font-size:16px;line-height:1.4;}
+#countdown{margin-top:20px;font-size:18px;color:#ffdd57;}
+.modal{display:none;position:fixed;z-index:10;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);}
+.modal-content{background:#222;margin:10% auto;padding:20px;border:2px solid #ffdd57;border-radius:8px;width:90%;max-width:500px;text-align:center;color:white;}
+.close{color:#ffdd57;float:right;font-size:28px;cursor:pointer;}
+.close:hover{color:white;}
+</style>
+</head>
+<body>
+<div class="menu">
+  <div class="dropdown">
+    <button class="dropbtn">Egyházi szolgáltatások</button>
+    <div class="dropdown-content">
+      <a href="#" id="gyontas">Gyónatás</a>
+      <a href="#" id="szentmise">Szentmise</a>
+    </div>
+  </div>
+  <button id="biblia" class="dropbtn">Szentírás</button>
+  
+  <div class="dropdown">
+    <button class="dropbtn">Támogatás</button>
+    <div class="dropdown-content">
+      <a href="#" id="adomanyozas">Adományozás</a>
+      <a href="#" id="kapcsolat">Kapcsolat</a>
+    </div>
+  </div>
+
+  <button id="vatikan" class="dropbtn">Vatikán Live</button>
+  <button id="szenteles" class="dropbtn">Szentelési adatok</button>
+</div>
+
+<main class="wrap">
+  <div class="logo">Áldott Kereső</div>
+  <div class="subtitle">"Az Úr útjai tökéletesek" — keresd, amit a szíved hív.</div>
+  
+  <div class="search">
+    <input type="text" id="q" placeholder="Keresés a Szentírásban, hittanban vagy a weben">
+  </div>
+  
+  <div class="btns">
+    <button type="button" class="primary" id="searchBtn">Keresés</button>
+    <button type="button" id="lucky">Áldott út</button>
+  </div>
+  
+  <p id="rotaloQuote">"Keressétek először Isten országát és az ő igazságát, és minden más megadatik nektek." — (Mt 6:33)</p>
+  <p id="datum"></p>
+
+  <!-- Visszaszámláló ünnepekig -->
+  <div id="countdown"></div>
+</main>
+
+<div class="footer">Isten áldjon meg az utadon.</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2 id="modalTitle">Cím</h2>
+    <p id="modalText">Szöveg</p>
+  </div>
+</div>
+
+<script>
+// Rotáló idézet
+const quotes = [
+  '"Keressétek először Isten országát és az ő igazságát, és minden más megadatik nektek." — (Mt 6:33)',
+  '"Az Úr a pásztorom, nem szűkölködöm." — (Zsolt 23:1)',
+  '"Mindenre van erőm a Krisztusban, aki megerősít engem." — (Fil 4:13)',
+  '"Szeressétek egymást, ahogy én szerettelek titeket." — (Jn 15:12)'
+];
+let quoteIndex = 0;
+const rotaloQuoteEl = document.getElementById('rotaloQuote');
+function rotateQuote(){ 
+  rotaloQuoteEl.textContent = quotes[quoteIndex]; 
+  quoteIndex = (quoteIndex + 1) % quotes.length; 
+}
+setInterval(rotateQuote,8000);
+
+// Dátum blokk
+const datumEl = document.getElementById('datum');
+function getHungarianWeekday(date){
+  const weekdays = ["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
+  return weekdays[date.getDay()];
+}
+function updateDatum(){
+  const now = new Date();
+  const ev = now.getFullYear();
+  const honapok = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
+  const honap = honapok[now.getMonth()];
+  const nap = now.getDate();
+  const weekday = getHungarianWeekday(now);
+  datumEl.innerHTML = `A mai dátum: ${ev}. ${honap} ${nap}. ${weekday}`;
+}
+updateDatum();
+
+// Modal
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const modalText = document.getElementById('modalText');
+const closeBtn = document.querySelector('.close');
+
+document.getElementById('gyontas').addEventListener('click', function(){
+  modalTitle.innerHTML = 'Online Gyónatás';
+  modalText.innerHTML = 'Online gyónatásra van lehetőség.<br>Kapcsolat felvétel: <a href="mailto:xivlajospapa@freemail.hu">xivlajospapa@freemail.hu</a>';
+  modal.style.display='block';
+});
+document.getElementById('szentmise').addEventListener('click', function(){
+  modalTitle.innerHTML = 'Online Szentmise';
+  modalText.innerHTML = 'Online szentmisére van lehetőség.<br>Kapcsolat felvétel: <a href="mailto:xivlajospapa@freemail.hu">xivlajospapa@freemail.hu</a>';
+  modal.style.display='block';
+});
+document.getElementById('adomanyozas').addEventListener('click', function(){
+  modalTitle.innerHTML = 'Adományozás';
+  modalText.innerHTML = `
+    Ha szeretnél támogatni minket, az alábbi lehetőségek állnak rendelkezésedre:<br><br>
+    <strong>Banki átutalás:</strong><br>
+    Név: Fedák Csongor<br>
+    Számlaszám: 1177332203233766<br>
+    Köszönjük, hogy támogatod a célunkat!<br><br>
+    <strong>Online fizetés (PayPal):</strong><br>
+    <a href="https://www.paypal.com/donate" target="_blank">Adományozás PayPal-on</a>
+  `;
+  modal.style.display='block';
+});
+document.getElementById('kapcsolat').addEventListener('click', function(){
+  modalTitle.innerHTML = 'Kapcsolat';
+  modalText.innerHTML = 'Kapcsolat felvétel: <a href="mailto:xivlajospapa@freemail.hu">xivlajospapa@freemail.hu</a>';
+  modal.style.display='block';
+});
+document.getElementById('szenteles').addEventListener('click', function(){
+  modalTitle.innerHTML = 'Szentelési adatok – XIV. Lajos pápa';
+  modalText.innerHTML = `
+    <strong>Keresztelés helyszíne:</strong> Szent Péter-bazilika, Vatikán<br>
+    <strong>Dátum:</strong> 1975. január 12.<br><br>
+    <strong>Élettörténet:</strong><br>
+    XIV. Lajos Budapesten született egy hívő családban. Már gyermekként mélyen érdeklődött a vallás és a filozófia iránt. Tizenéves korában a plébániai közösség aktív tagja lett, rendszeresen segített a rászorulókon és részt vett a helyi templomi tevékenységekben.<br><br>
+    Fiatal felnőttként a Vatikánban tanult teológiát, ahol kiemelkedett bölcsességével és emberszeretetével. Papként számos közösségi programot indított, majd hamarosan püspökké, később pedig bíborossá választották.<br><br>
+    A pápa 2025-ben lett XIV. Lajos, és vezetése alatt a világ minden táján a béke, szeretet és közösség építésére helyezte a hangsúlyt. Munkássága során kiemelkedő volt a fiatalok támogatása és a szociális programok beindítása.
+  `;
+  modal.style.display='block';
+});
+
+closeBtn.addEventListener('click',()=>modal.style.display='none');
+window.addEventListener('click',e=>{if(e.target==modal) modal.style.display='none';});
+
+// Keresés a Biblia Gateway-ben
+document.getElementById('lucky').addEventListener('click', function(){
+  const q = document.getElementById('q').value.trim();
+  if(q){
+    window.open('https://www.biblegateway.com/quicksearch/?quicksearch=' + encodeURIComponent(q), '_blank');
+  } else {
+    window.open('https://www.vatican.va','_blank');
+  }
+});
+document.getElementById('biblia').addEventListener('click',function(){
+  window.open('https://www.biblegateway.com/passage/?search=John+3%3A16&version=KJV','_blank');
+});
+document.getElementById('vatikan').addEventListener('click', function(){
+    window.open('https://www.youtube.com/@VaticanNews/live', '_blank');
+});
+
+// Visszaszámláló ünnepekig
+const countdownEl = document.getElementById('countdown');
+const upcomingHolidays = [
+  {name:"Advent", date:"2025-12-01"},
+  {name:"Karácsony", date:"2025-12-25"},
+  {name:"Húsvét", date:"2026-04-20"}
+];
+function updateCountdown(){
+  const now = new Date();
+  let nextHoliday = upcomingHolidays.find(h => new Date(h.date) > now);
+  if(!nextHoliday) nextHoliday = upcomingHolidays[0];
+  const holidayDate = new Date(nextHoliday.date);
+  const diff = holidayDate - now;
+  const days = Math.floor(diff / (1000*60*60*24));
+  const hours = Math.floor((diff / (1000*60*60)) % 24);
+  const minutes = Math.floor((diff / (1000*60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+  countdownEl.innerHTML = `Következő ünnep: ${nextHoliday.name} — visszaszámlálás: ${days} nap ${hours} óra ${minutes} perc ${seconds} mp`;
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+</script>
+</body>
+</html>
